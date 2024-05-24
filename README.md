@@ -1,7 +1,7 @@
 # Integración Continua
 
 ### Frontend
-- [ ] Inicializar proyecto con Vite
+- [x] Inicializar proyecto con Vite
 - [ ] Añadir linter para TypeScript + React
 
 ### Backend
