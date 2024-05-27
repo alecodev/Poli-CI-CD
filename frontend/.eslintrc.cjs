@@ -67,6 +67,7 @@ module.exports = {
       'warn',
       { allowConstantExport: true },
     ],
+    'react/prop-types': 'off',
     'react/react-in-jsx-scope': 'off',
     'sort-imports': [
       'error',
@@ -82,6 +83,11 @@ module.exports = {
   settings: {
     react: {
       version: 'detect',
+    },
+    'import/resolver': {
+      node: {
+        extensions: ['.ts', '.tsx', '.d.ts', '.mjs'],
+      },
     },
   },
 };
