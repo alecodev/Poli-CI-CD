@@ -1,24 +1,15 @@
 import { type TodoList } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL;
-const API_BIN_KEY = import.meta.env.VITE_API_BIN_KEY;
-console.info({ API_URL, API_BIN_KEY });
 
-interface Todo {
-  id: string;
-  title: string;
-  completed: boolean;
-  order: number;
-}
-
-export const fetchTodos = async (): Promise<Todo[]> => {
+export const fetchTodos = async (): Promise<TodoList> => {
   const res = await fetch(API_URL);
   if (!res.ok) {
     console.error('Error fetching todos');
     return [];
   }
 
-  const { record: todos } = (await res.json()) as { record: Todo[] };
+  const todos = (await res.json()) as TodoList;
   return todos;
 };
 
@@ -29,10 +20,7 @@ export const updateTodos = async ({
 }): Promise<boolean> => {
   const res = await fetch(API_URL, {
     method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Master-Key': API_BIN_KEY,
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(todos),
   });
 
