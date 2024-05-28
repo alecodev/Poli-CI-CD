@@ -1,5 +1,9 @@
 # Integración Continua
 
+### Steps to execute
+
+- To run it in production, execute `docker compose -f docker-compose.yml -f docker-compose.production.yml up -d`
+
 ### Frontend
 
 - [x] Inicializar proyecto con Vite
@@ -14,4 +18,4 @@
 
 ### Deploy
 
-- [ ] Dockerizar aplicación
+- [x] Dockerizar aplicación
