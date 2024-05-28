@@ -8,7 +8,7 @@
 
 ### Backend
 
-- [ ] Crear API con Golang
+- [x] Crear API con Golang
 - [ ] Crear sesión única para cada usuario
 - [ ] Almacenar datos en base de datos Mongo
 
