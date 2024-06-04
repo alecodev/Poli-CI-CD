@@ -13,8 +13,8 @@
 ### Backend
 
 - [x] Crear API con Golang
-- [ ] Crear sesión única para cada usuario
-- [ ] Almacenar datos en base de datos Mongo
+- [x] Crear sesión única para cada usuario
+- [ ] Almacenar datos en base de datos NoSQL
 
 ### Deploy
 

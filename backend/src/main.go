@@ -7,15 +7,32 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	libUUID "github.com/google/uuid"
 )
 
-type Todo struct {
+type ToDo struct {
 	Id        string `json:"id" validate:"required,min=1"`
 	Title     string `json:"title" validate:"required,min=1"`
 	Completed bool   `json:"completed" validate:"required,min=1"`
 }
 
-var Todos = []Todo{}
+var ToDosList = map[string][]ToDo{}
+
+// add the middleware function
+func uuidMiddleware(c *gin.Context) {
+	uuid := c.Param("uuid")
+
+	err := libUUID.Validate(uuid)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusPreconditionFailed, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.Set("uuid", uuid)
+	c.Next()
+}
 
 func setupRouter() *gin.Engine {
 	router := gin.Default()
@@ -25,7 +42,7 @@ func setupRouter() *gin.Engine {
 	// - Credentials share disabled
 	// - Preflight requests cached for 12 hours
 	config := cors.DefaultConfig()
-	// config.AllowOrigins = []string{"http://localhost:5173", "http://google.com"}
+	// config.AllowOrigins = []string{"http://localhost", "http://google.com"}
 	config.AllowAllOrigins = true
 
 	router.Use(cors.New(config))
@@ -35,23 +52,34 @@ func setupRouter() *gin.Engine {
 		c.String(http.StatusOK, "API is up and running")
 	})
 
-	router.GET("/todos", func(c *gin.Context) {
-		c.JSON(http.StatusOK, Todos)
-	})
+	authorized := router.Group("/todos/:uuid")
+	authorized.Use(uuidMiddleware)
+	{
+		authorized.GET("", func(c *gin.Context) {
+			uuid := c.GetString("uuid")
+			toDos := ToDosList[uuid]
+			if toDos == nil {
+				toDos = []ToDo{}
+			}
+			c.JSON(http.StatusOK, toDos)
+		})
 
-	router.PUT("/todos", func(c *gin.Context) {
-		var tmpTodos []Todo
+		authorized.PUT("", func(c *gin.Context) {
+			var tmpToDos []ToDo
 
-		if err := c.BindJSON(&tmpTodos); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": err.Error(),
-			})
-			return
-		}
-		Todos = tmpTodos
+			if err := c.BindJSON(&tmpToDos); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"error": err.Error(),
+				})
+				return
+			}
 
-		c.Status(http.StatusNoContent)
-	})
+			uuid := c.GetString("uuid")
+			ToDosList[uuid] = tmpToDos
+
+			c.Status(http.StatusNoContent)
+		})
+	}
 
 	return router
 }

@@ -1,10 +1,19 @@
 import { useEffect, useReducer } from 'react';
 
 import { TODO_FILTERS } from '../consts';
-import { fetchTodos, updateTodos } from '../services/todos';
+import { FetchError, fetchTodos, updateTodos } from '../services/todos';
 import { type FilterValue, type TodoList } from '../types';
 
-const initialState = {
+const initialState: State = {
+  uuid: (() => {
+    // read from url pathname params
+    const pathname = window.location.pathname;
+    const uuid = pathname.split('/')[1];
+
+    if (uuid !== '') return uuid;
+
+    return crypto.randomUUID();
+  })(),
   sync: false,
   todos: [],
   filterSelected: (() => {
@@ -21,6 +30,7 @@ const initialState = {
 
 type Action =
   | { type: 'INIT_TODOS'; payload: { todos: TodoList } }
+  | { type: 'REGENERATE_UUID'; payload: { uuid: string } }
   | { type: 'CLEAR_COMPLETED' }
   | { type: 'COMPLETED'; payload: { id: string; completed: boolean } }
   | { type: 'FILTER_CHANGE'; payload: { filter: FilterValue } }
@@ -29,6 +39,7 @@ type Action =
   | { type: 'UPDATE_TITLE'; payload: { id: string; title: string } };
 
 interface State {
+  uuid: string;
   sync: boolean;
   todos: TodoList;
   filterSelected: FilterValue;
@@ -41,6 +52,15 @@ const reducer = (state: State, action: Action): State => {
       ...state,
       sync: false,
       todos,
+    };
+  }
+
+  if (action.type === 'REGENERATE_UUID') {
+    const { uuid } = action.payload;
+    return {
+      ...state,
+      uuid,
+      sync: false,
     };
   }
 
@@ -124,6 +144,18 @@ const reducer = (state: State, action: Action): State => {
   return state;
 };
 
+const updateUrlUUID = (uuid: string): void => {
+  let pathname = window.location.pathname;
+
+  const pathUUID = '/' + uuid;
+  if (pathname !== pathUUID) pathname = pathUUID;
+
+  const params = new URLSearchParams(window.location.search);
+  const stringParams = params.size === 0 ? '' : `?${params.toString()}`;
+
+  window.history.pushState({}, '', `${pathname}${stringParams}`);
+};
+
 export const useTodos = (): {
   activeCount: number;
   completedCount: number;
@@ -136,7 +168,7 @@ export const useTodos = (): {
   handleSave: (title: string) => void;
   handleUpdateTitle: (params: { id: string; title: string }) => void;
 } => {
-  const [{ sync, todos, filterSelected }, dispatch] = useReducer(
+  const [{ uuid, sync, todos, filterSelected }, dispatch] = useReducer(
     reducer,
     initialState,
   );
@@ -157,6 +189,12 @@ export const useTodos = (): {
     title: string;
   }): void => {
     dispatch({ type: 'UPDATE_TITLE', payload: { id, title } });
+  };
+
+  const regenerateUUID = (): void => {
+    const uuid = crypto.randomUUID();
+    dispatch({ type: 'REGENERATE_UUID', payload: { uuid } });
+    updateUrlUUID(uuid);
   };
 
   const handleSave = (title: string): void => {
@@ -195,22 +233,41 @@ export const useTodos = (): {
   const activeCount = todos.length - completedCount;
 
   useEffect(() => {
-    fetchTodos()
+    fetchTodos({ uuid })
       .then(todos => {
         dispatch({ type: 'INIT_TODOS', payload: { todos } });
+        updateUrlUUID(uuid);
       })
       .catch(err => {
+        if (err instanceof FetchError && err.code === 412) {
+          const {
+            code,
+            data: { error },
+          } = err;
+          console.error({ code, error });
+          regenerateUUID();
+        }
+
         console.error(err);
       });
-  }, []);
+  }, [uuid]);
 
   useEffect(() => {
     if (sync) {
-      updateTodos({ todos }).catch(err => {
+      updateTodos({ uuid, todos }).catch(err => {
+        if (err instanceof FetchError && err.code === 412) {
+          const {
+            code,
+            data: { error },
+          } = err;
+          console.error({ code, error });
+          regenerateUUID();
+        }
+
         console.error(err);
       });
     }
-  }, [todos, sync]);
+  }, [uuid, sync, todos]);
 
   return {
     activeCount,
