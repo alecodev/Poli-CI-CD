@@ -14,7 +14,7 @@
 
 - [x] Crear API con Golang
 - [x] Crear sesión única para cada usuario
-- [ ] Almacenar datos en base de datos NoSQL
+- [x] Almacenar datos en base de datos NoSQL
 
 ### Deploy
 

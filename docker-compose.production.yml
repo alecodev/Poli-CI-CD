@@ -2,7 +2,29 @@ services:
   frontend:
     ports:
       - 0.0.0.0:80:80/tcp
+    depends_on:
+      - backend
 
   backend:
+    env_file:
+      - backend/.env
     ports:
       - 0.0.0.0:8000:8000/tcp
+    depends_on:
+      - redisdb
+    networks:
+      - poli-ci-cd-network
+
+  redisdb:
+    restart: always
+    volumes:
+      - redis-data:/data:rw
+    networks:
+      - poli-ci-cd-network
+
+volumes:
+  redis-data:
+
+networks:
+  poli-ci-cd-network:
+    name: poli-ci-cd-network

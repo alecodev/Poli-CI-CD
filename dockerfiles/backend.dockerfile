@@ -15,9 +15,6 @@ LABEL authors="docker@alecodev.com"
 
 COPY --from=builder /app/build/main /
 
-ARG PORT="8080"
-ENV PORT=$PORT
-
-EXPOSE $PORT
+EXPOSE 8000
 
 CMD [ "/main" ]

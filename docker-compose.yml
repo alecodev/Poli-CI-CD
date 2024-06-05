@@ -5,4 +5,7 @@ services:
 
   backend:
     image: alecodev/poli-ci-cd-backend
-    # docker build --build-arg PORT="8000" -t alecodev/poli-ci-cd-backend -f ./dockerfiles/backend.dockerfile backend
+    # docker build -t alecodev/poli-ci-cd-backend -f ./dockerfiles/backend.dockerfile backend
+
+  redisdb:
+    image: redis:7.2-alpine

@@ -1,13 +1,17 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	libUUID "github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 )
 
 type ToDo struct {
@@ -16,7 +20,8 @@ type ToDo struct {
 	Completed bool   `json:"completed" validate:"required,min=1"`
 }
 
-var ToDosList = map[string][]ToDo{}
+var conn *redis.Client
+var ctx = context.Background()
 
 // add the middleware function
 func uuidMiddleware(c *gin.Context) {
@@ -57,10 +62,17 @@ func setupRouter() *gin.Engine {
 	{
 		authorized.GET("", func(c *gin.Context) {
 			uuid := c.GetString("uuid")
-			toDos := ToDosList[uuid]
-			if toDos == nil {
-				toDos = []ToDo{}
+			toDos := []ToDo{}
+
+			val, err := conn.Get(ctx, uuid).Result()
+			if err == nil {
+				if err = json.Unmarshal([]byte(val), &toDos); err != nil {
+					log.Panic(err)
+				}
+			} else if err != redis.Nil {
+				log.Panic(err)
 			}
+
 			c.JSON(http.StatusOK, toDos)
 		})
 
@@ -74,8 +86,15 @@ func setupRouter() *gin.Engine {
 				return
 			}
 
+			tmpToDosInByte, err := json.Marshal(tmpToDos)
+			if err != nil {
+				log.Panic(err)
+			}
+
 			uuid := c.GetString("uuid")
-			ToDosList[uuid] = tmpToDos
+			if err = conn.Set(ctx, uuid, tmpToDosInByte, 7*24*time.Hour).Err(); err != nil {
+				log.Panic(err)
+			}
 
 			c.Status(http.StatusNoContent)
 		})
@@ -85,14 +104,23 @@ func setupRouter() *gin.Engine {
 }
 
 func main() {
+	// DB connection
+	conn = redis.NewClient(&redis.Options{
+		Addr:     os.Getenv("DB_HOST") + ":" + os.Getenv("DB_PORT"),
+		Username: os.Getenv("DB_USER"),
+		Password: os.Getenv("DB_PASSWORD"),
+		DB:       0,
+	})
+
+	defer func() {
+		if err := conn.Close(); err != nil {
+			log.Panic(err)
+		}
+	}()
+
 	r := setupRouter()
 
-	port := os.Getenv("PORT")
-
-	if port == "" {
-		port = "8080"
-		log.Printf("Defaulting to port %s", port)
-	}
+	port := "8000"
 
 	// Listen and serve on defined port
 	log.Printf("Listening on port %s", port)
