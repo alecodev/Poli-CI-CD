@@ -105,12 +105,8 @@ func setupRouter() *gin.Engine {
 
 func main() {
 	// DB connection
-	conn = redis.NewClient(&redis.Options{
-		Addr:     os.Getenv("DB_HOST") + ":" + os.Getenv("DB_PORT"),
-		Username: os.Getenv("DB_USER"),
-		Password: os.Getenv("DB_PASSWORD"),
-		DB:       0,
-	})
+	opt, _ := redis.ParseURL(os.Getenv("REDIS_URL"))
+	conn = redis.NewClient(opt)
 
 	defer func() {
 		if err := conn.Close(); err != nil {
