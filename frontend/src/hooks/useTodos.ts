@@ -4,12 +4,23 @@ import { TODO_FILTERS } from '../consts';
 import { FetchError, fetchTodos, updateTodos } from '../services/todos';
 import { type FilterValue, type TodoList } from '../types';
 
+const BASE_URL = import.meta.env.BASE_URL;
+
+// Get UUID from URL
+const getUrlUUID = (): string => {
+  // read from url pathname params
+  let pathname = window.location.pathname;
+
+  const regex = new RegExp('^' + BASE_URL, 'g');
+  pathname = pathname.replace(regex, '');
+
+  const uuid = pathname.split('/', 1)[0];
+  return uuid;
+};
+
 const initialState: State = {
   uuid: (() => {
-    // read from url pathname params
-    const pathname = window.location.pathname;
-    const uuid = pathname.split('/')[1];
-
+    const uuid = getUrlUUID();
     if (uuid !== '') return uuid;
 
     return crypto.randomUUID();
@@ -145,15 +156,13 @@ const reducer = (state: State, action: Action): State => {
 };
 
 const updateUrlUUID = (uuid: string): void => {
-  let pathname = window.location.pathname;
-
-  const pathUUID = '/' + uuid;
-  if (pathname !== pathUUID) pathname = pathUUID;
+  let urlUUID = getUrlUUID();
+  if (urlUUID !== uuid) urlUUID = uuid;
 
   const params = new URLSearchParams(window.location.search);
   const stringParams = params.size === 0 ? '' : `?${params.toString()}`;
 
-  window.history.pushState({}, '', `${pathname}${stringParams}`);
+  window.history.pushState({}, '', `${BASE_URL + urlUUID}${stringParams}`);
 };
 
 export const useTodos = (): {

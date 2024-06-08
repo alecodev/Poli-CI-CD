@@ -1,7 +1,7 @@
 services:
   frontend:
     image: alecodev/poli-ci-cd-frontend
-    # docker build --build-arg VITE_API_URL="http://localhost:8000/todos" -t alecodev/poli-ci-cd-frontend -f ./dockerfiles/frontend.dockerfile --target runner frontend
+    # docker build --build-arg BASE_URL="/" --build-arg VITE_API_URL="http://localhost:8000/todos" -t alecodev/poli-ci-cd-frontend -f ./dockerfiles/frontend.dockerfile --target runner frontend
 
   backend:
     image: alecodev/poli-ci-cd-backend
