@@ -59,4 +59,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Deployment of Docker image in Render
-        run: curl ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: curl -s -o /dev/null ${{ secrets.RENDER_DEPLOY_HOOK }}

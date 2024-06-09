@@ -1,0 +1,45 @@
+services:
+  frontend:
+    build:
+      context: frontend
+      dockerfile: ../dockerfiles/frontend.dockerfile
+      target: dev
+    command: pnpm run dev
+    environment:
+      - NODE_ENV=development
+    env_file:
+      - frontend/.env
+    volumes:
+      - ./frontend/.:/app
+      - /app/node_modules
+    ports:
+      - 127.0.0.1:3000:80/tcp
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: backend
+      dockerfile: ../dockerfiles/backend.dockerfile
+    env_file:
+      - backend/.env
+    ports:
+      - 127.0.0.1:8000:8000/tcp
+    depends_on:
+      - redisdb
+    networks:
+      - poli-ci-cd-network
+
+  redisdb:
+    restart: always
+    volumes:
+      - redis-data:/data:rw
+    networks:
+      - poli-ci-cd-network
+
+volumes:
+  redis-data:
+
+networks:
+  poli-ci-cd-network:
+    name: poli-ci-cd-network
