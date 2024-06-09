@@ -1,0 +1,16 @@
+.dockerignore
+.env
+.env-sample
+.env.*
+.git
+.github
+.gitignore
+.husky
+.vscode
+dist
+docker-compose.*.yml
+docker-compose.yml
+dockerfiles
+LICENSE
+node_modules
+README.md

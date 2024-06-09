@@ -5,7 +5,7 @@ services:
 
   backend:
     image: alecodev/poli-ci-cd-backend
-    # docker build -t alecodev/poli-ci-cd-backend -f ./dockerfiles/backend.dockerfile backend
+    # docker build -t alecodev/poli-ci-cd-backend -f ./dockerfiles/backend.dockerfile --target runner backend
 
   redisdb:
     image: redis:7.2-alpine
